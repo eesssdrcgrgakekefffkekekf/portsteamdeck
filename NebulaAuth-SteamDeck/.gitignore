@@ -1,0 +1,32 @@
+# Build outputs
+bin/
+obj/
+build/
+publish/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# .NET
+*.nupkg
+*.snupkg
+
+# NuGet
+packages/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# User data
+maFiles/
+settings.json
+proxies.json

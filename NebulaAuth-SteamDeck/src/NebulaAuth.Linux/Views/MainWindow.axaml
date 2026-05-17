@@ -1,0 +1,240 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NebulaAuth.Linux.ViewModels"
+        x:Class="NebulaAuth.Linux.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="NebulaAuth - Steam Deck"
+        Width="1280" Height="800"
+        MinWidth="800" MinHeight="480"
+        Background="#1B2838"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- Large touch-friendly buttons for Steam Deck -->
+        <Style Selector="Button">
+            <Setter Property="MinHeight" Value="48"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="MinHeight" Value="52"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid ColumnDefinitions="320,*" RowDefinitions="Auto,*,Auto">
+
+        <!-- ========== Left Panel: Account List ========== -->
+        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                Background="#171A21" 
+                BorderBrush="#2A475E" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Search -->
+                <StackPanel DockPanel.Dock="Top" Margin="8">
+                    <TextBox Watermark="Search accounts..."
+                             Text="{Binding SearchText}"
+                             Margin="0,0,0,8"/>
+                    
+                    <!-- Group filter -->
+                    <ComboBox ItemsSource="{Binding Groups}"
+                              SelectedItem="{Binding SelectedGroup}"
+                              MinHeight="44" FontSize="14"
+                              HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <!-- Import button -->
+                <Button DockPanel.Dock="Bottom" 
+                        Content="Import .maFile"
+                        Command="{Binding ImportMafilesCommand}"
+                        HorizontalAlignment="Stretch"
+                        Margin="8"
+                        Background="#4C6B22" Foreground="White"/>
+
+                <!-- Account list -->
+                <ListBox ItemsSource="{Binding FilteredAccounts}"
+                         SelectedItem="{Binding SelectedAccount}"
+                         Background="Transparent"
+                         Margin="4">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding AccountName}" 
+                                           FontWeight="Bold" FontSize="16"
+                                           Foreground="#C6D4DF"/>
+                                <TextBlock Text="{Binding SteamId}" 
+                                           FontSize="12" Foreground="#66C0F4"
+                                           Opacity="0.7"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ========== Top Bar ========== -->
+        <Border Grid.Column="1" Grid.Row="0" 
+                Background="#1B2838" Padding="16,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" 
+                            Orientation="Horizontal" Spacing="8">
+                    <Button Content="Confirmations"
+                            Command="{Binding ToggleConfirmationsCommand}"
+                            Background="#2A475E" Foreground="#C6D4DF"/>
+                    <Button Content="Settings"
+                            Command="{Binding ToggleSettingsCommand}"
+                            Background="#2A475E" Foreground="#C6D4DF"/>
+                </StackPanel>
+
+                <!-- Auto-confirm toggles -->
+                <StackPanel Orientation="Horizontal" Spacing="16"
+                            VerticalAlignment="Center">
+                    <CheckBox Content="Auto Trades"
+                              IsChecked="{Binding IsAutoConfirmTrades}"
+                              FontSize="14" Foreground="#C6D4DF"/>
+                    <CheckBox Content="Auto Market"
+                              IsChecked="{Binding IsAutoConfirmMarket}"
+                              FontSize="14" Foreground="#C6D4DF"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ========== Main Content: Code Display ========== -->
+        <Panel Grid.Column="1" Grid.Row="1">
+            
+            <!-- Code display (main view) -->
+            <StackPanel IsVisible="{Binding !IsSettingsVisible}"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Spacing="16">
+
+                <!-- Account name -->
+                <TextBlock Text="{Binding SelectedAccount.AccountName, FallbackValue='Select an account'}"
+                           FontSize="20" Foreground="#66C0F4"
+                           HorizontalAlignment="Center"/>
+
+                <!-- Code -->
+                <Border Background="#0E141B" CornerRadius="12"
+                        Padding="48,24" 
+                        BorderBrush="#2A475E" BorderThickness="2">
+                    <Button Command="{Binding CopyCodeCommand}"
+                            Background="Transparent"
+                            HorizontalAlignment="Center"
+                            Cursor="Hand">
+                        <TextBlock Text="{Binding CurrentCode}"
+                                   FontSize="64" FontWeight="Bold"
+                                   Foreground="#A3CF06"
+                                   FontFamily="monospace"
+                                   LetterSpacing="8"/>
+                    </Button>
+                </Border>
+
+                <!-- Progress bar (time remaining) -->
+                <ProgressBar Value="{Binding CodeProgress}"
+                             Maximum="1"
+                             Height="8" 
+                             Width="350"
+                             CornerRadius="4"
+                             Foreground="#A3CF06"
+                             Background="#2A475E"/>
+
+                <TextBlock Text="{Binding SecondsRemaining, StringFormat='{}{0}s'}"
+                           FontSize="16" Foreground="#8F98A0"
+                           HorizontalAlignment="Center"/>
+
+                <!-- Click to copy hint -->
+                <TextBlock Text="Click code to copy to clipboard"
+                           FontSize="14" Foreground="#4F5B66"
+                           HorizontalAlignment="Center"/>
+
+                <!-- Confirmations section -->
+                <Border IsVisible="{Binding IsConfirmationsVisible}"
+                        Background="#171A21" CornerRadius="8"
+                        Padding="16" Margin="0,16,0,0"
+                        MaxWidth="600" MinWidth="500">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" 
+                                    Spacing="8" Margin="0,0,0,12">
+                            <Button Content="Refresh"
+                                    Command="{Binding RefreshConfirmationsCommand}"
+                                    Background="#2A475E" Foreground="#C6D4DF"/>
+                            <Button Content="Accept All"
+                                    Command="{Binding AcceptAllCommand}"
+                                    Background="#4C6B22" Foreground="White"/>
+                        </StackPanel>
+
+                        <ListBox ItemsSource="{Binding Confirmations}"
+                                 Background="Transparent" MaxHeight="300">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" 
+                                                    Orientation="Horizontal" Spacing="4">
+                                            <Button Content="Accept" 
+                                                    FontSize="14" MinHeight="36"
+                                                    Background="#4C6B22" Foreground="White"
+                                                    CommandParameter="{Binding}"
+                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).AcceptConfirmationCommand}"/>
+                                            <Button Content="Deny"
+                                                    FontSize="14" MinHeight="36"
+                                                    Background="#8B1A1A" Foreground="White"
+                                                    CommandParameter="{Binding}"
+                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).DenyConfirmationCommand}"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Type}" Foreground="#C6D4DF"/>
+                                            <TextBlock Text="{Binding Id, StringFormat='ID: {0}'}" 
+                                                       FontSize="12" Foreground="#8F98A0"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Settings panel -->
+            <ScrollViewer IsVisible="{Binding IsSettingsVisible}">
+                <StackPanel Margin="32" Spacing="16" MaxWidth="500">
+                    <TextBlock Text="Settings" FontSize="24" 
+                               FontWeight="Bold" Foreground="#C6D4DF"/>
+
+                    <Border Background="#171A21" CornerRadius="8" Padding="16">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Confirmation interval (seconds):" Foreground="#8F98A0"/>
+                            <TextBox Text="30" Watermark="Seconds"/>
+                            
+                            <Separator Background="#2A475E" Margin="0,8"/>
+
+                            <CheckBox Content="Gamepad Mode (larger UI elements)"
+                                      IsChecked="True" Foreground="#C6D4DF"/>
+                            
+                            <CheckBox Content="Legacy mafile compatibility mode"
+                                      IsChecked="True" Foreground="#C6D4DF"/>
+                            
+                            <Separator Background="#2A475E" Margin="0,8"/>
+                            
+                            <TextBlock Text="maFiles Directory:" Foreground="#8F98A0"/>
+                            <TextBox Text="maFiles" Watermark="Directory path"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Panel>
+
+        <!-- ========== Status Bar ========== -->
+        <Border Grid.Column="1" Grid.Row="2" 
+                Background="#171A21" Padding="16,8">
+            <TextBlock Text="{Binding StatusText}" 
+                       FontSize="14" Foreground="#8F98A0"/>
+        </Border>
+    </Grid>
+</Window>
