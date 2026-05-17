@@ -1,0 +1,51 @@
+# Maintainer: NebulaAuth Community
+pkgname=nebulaauth
+pkgver=1.8.4
+pkgrel=1
+pkgdesc="Steam Guard Desktop Authenticator - Linux port for Steam Deck"
+arch=('x86_64')
+url="https://github.com/achiez/NebulaAuth-Steam-Desktop-Authenticator-by-Achies"
+license=('custom')
+depends=('fontconfig' 'libx11' 'libxcb' 'libxi' 'libxrandr' 'libxcursor' 'mesa')
+makedepends=('dotnet-sdk-8.0')
+optdepends=(
+    'xclip: clipboard support in X11'
+    'wl-clipboard: clipboard support in Wayland'
+)
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+    
+    dotnet publish src/NebulaAuth.Linux/NebulaAuth.Linux.csproj \
+        -c Release \
+        -r linux-x64 \
+        --self-contained true \
+        -p:PublishSingleFile=true \
+        -p:PublishTrimmed=true \
+        -p:TrimMode=partial \
+        -p:IncludeNativeLibrariesForSelfExtract=true \
+        -o "$srcdir/publish"
+}
+
+package() {
+    install -Dm755 "$srcdir/publish/NebulaAuth" "$pkgdir/usr/bin/nebulaauth"
+    
+    # Desktop file
+    install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/nebulaauth.desktop" << EOF
+[Desktop Entry]
+Name=NebulaAuth
+Comment=Steam Guard Authenticator
+Exec=/usr/bin/nebulaauth
+Icon=nebulaauth
+Terminal=false
+Type=Application
+Categories=Game;Utility;
+Keywords=Steam;Guard;2FA;Authenticator;
+StartupWMClass=NebulaAuth
+EOF
+
+    # License
+    install -Dm644 "$srcdir/$pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
